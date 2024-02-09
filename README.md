@@ -3,6 +3,7 @@
 This mobile application is a simple TicTacToe game built using React Native and Expo. It incorporates Firebase Authentication for user authentication and Firebase Realtime Database for real-time updates during gameplay.
 
 [![Watch the Demo](./assets/thumbnail.png)](https://youtu.be/OEBSIbldbQU)
+_Click to Watch Demo_
 
 ## Getting Started
 
