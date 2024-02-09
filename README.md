@@ -82,6 +82,7 @@ Ensure you have the Expo Go app installed on your device.
 
 Given I haven't touched react native in 3 years, I feel proud of my progress so far. However, there are always improvements that can be made. Here are some that I would implement next in order to make the app more polished -
 
+- More organized data schema to encapsulate game information in an efficient manner
 - Signout Button
 - Authentication Session (Using Context API or Expo)
 - Game Session (Handling A Case When either user exits game prematurely)

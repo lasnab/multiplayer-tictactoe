@@ -9,6 +9,7 @@ import {
   Alert,
   Clipboard,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Entypo } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import { ref, onValue, set } from 'firebase/database';
 import { EMPTY_BOARD, maybeWinner } from '../../utils';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 export default function GameBoard() {
   const { type, gameId, nickName: currPlayer } = useLocalSearchParams();
@@ -24,6 +26,8 @@ export default function GameBoard() {
   const yourMove = type === 'new' ? 'x' : 'o';
   const otherMove = type === 'new' ? 'o' : 'x';
   const [players, setPlayers] = useState({ you: currPlayer, other: '' });
+
+  const [winner, setWinner] = useState('');
 
   const [disableInput, setDisableInput] = useState(true);
   const [activePlayers, setActivePlayers] = useState(1);
@@ -37,6 +41,7 @@ export default function GameBoard() {
   const activePlayersRef = ref(db, 'games/' + gameId + '/activePlayers');
   const otherRef = ref(db, 'games/' + gameId + otherMove);
   const gameEndedRef = ref(db, 'games/' + gameId + '/gameEnded');
+  const winnerRef = ref(db, 'games/' + gameId + '/winner');
 
   //   Update firebase store
   const updateBoard = (board) => {
@@ -52,6 +57,10 @@ export default function GameBoard() {
   const updateGameEnded = (val) => {
     set(gameEndedRef, val);
     setGameEnded(val);
+  };
+
+  const updateWinner = (val) => {
+    set(winnerRef, val);
   };
 
   //   Sync with datastore
@@ -80,6 +89,12 @@ export default function GameBoard() {
         setGameEnded(snapshot.val());
       }
     });
+
+    onValue(winnerRef, (snapshot) => {
+      if (snapshot) {
+        setWinner(snapshot.val());
+      }
+    });
   }, []);
 
   //   Control game play
@@ -96,31 +111,22 @@ export default function GameBoard() {
   //   Check if game tied
   const isGameTied = (board) => {
     if (!board.some((row) => row.some((cell) => cell === ''))) {
-      Alert.alert(`It's a tie!`, ``, [
-        {
-          text: 'New Game',
-          onPress: handleResetGame,
-        },
-      ]);
+      updateGameEnded(true);
     }
   };
 
   //   Check if game won
   const gameWon = (player) => {
     let winner = yourMove === player ? 'You' : players.other;
-    Alert.alert(`Huraaay`, `${winner} won`, [
-      {
-        text: 'New Game',
-        onPress: handleResetGame,
-      },
-    ]);
+    updateWinner(winner);
+    updateGameEnded(true);
   };
 
-  //   Whenever game is tied or someone won
-  const handleResetGame = () => {
-    updateGameEnded(true);
-    router.navigate('/home');
-  };
+  useEffect(() => {
+    if (gameEnded) {
+      setTimeout(() => router.navigate('/home'), 3000);
+    }
+  }, [gameEnded]);
 
   const handleGameMove = (rowIndex, columnIndex) => {
     Vibration.vibrate();
@@ -138,6 +144,19 @@ export default function GameBoard() {
     Clipboard.setString(gameId);
   };
 
+  if (gameEnded) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.header}>Game Ended</Text>
+        <Text style={{ ...styles.header, textTransform: 'uppercase' }}>
+          {winner ? `${winner} won!` : 'It was a Tie!'}
+        </Text>
+        <Text>Redirecting you back in a few seconds...</Text>
+        <ConfettiCannon count={300} origin={{ x: -10, y: 0 }} />
+      </View>
+    );
+  }
+
   return (
     <View
       style={styles.container}
@@ -145,10 +164,13 @@ export default function GameBoard() {
     >
       {disableInput && (
         <View style={styles.disabled}>
-          <Text style={styles.disabledText}>
-            Waiting for other player...{' '}
-            {activePlayers === 1 ? 'to Join Game' : 'to Make Move'}
-          </Text>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#000000" />
+            <Text style={styles.disabledText}>
+              Waiting for other player{' '}
+              {activePlayers === 1 ? 'to join game' : 'to make move'}
+            </Text>
+          </View>
         </View>
       )}
       <Link style={styles.button} href="/home">
@@ -194,6 +216,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   gameId: { fontSize: 14, marginBottom: 24 },
   scoreInfo: {
@@ -250,13 +277,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 100,
   },
-  disabledText: {
+  loadingContainer: {
     position: 'absolute',
     top: '50%',
-    textAlign: 'center',
-    width: '100%',
-    fontSize: 24,
     backgroundColor: 'white',
+    padding: 20,
+    width: '100%',
+    borderColor: 'black',
+    borderWidth: 3,
+    borderRadius: 8,
+  },
+  disabledText: {
+    marginTop: 8,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    fontSize: 16,
   },
 });
 

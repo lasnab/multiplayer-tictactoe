@@ -20,6 +20,7 @@
     "firebase": "^10.8.0",
     "react": "18.2.0",
     "react-native": "0.73.4",
+    "react-native-confetti-cannon": "^1.5.2",
     "react-native-gesture-handler": "~2.14.0",
     "react-native-get-random-values": "^1.10.0",
     "react-native-reanimated": "~3.6.2",

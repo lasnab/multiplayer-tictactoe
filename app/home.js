@@ -34,7 +34,6 @@ const Home = () => {
     set(ref(db, 'games/' + newGameId), {
       x: nickName,
       currentTurn: 'x',
-      winner: null,
       board: JSON.stringify(EMPTY_BOARD),
       activePlayers: 1,
       gameEnded: false,
