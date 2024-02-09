@@ -4,6 +4,9 @@ import { router } from 'expo-router';
 import 'react-native-get-random-values';
 import { auth } from '../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs(); //Ignore all log notifications
 
 export default function App() {
   useEffect(() => {
