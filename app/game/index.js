@@ -20,43 +20,41 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function GameBoard() {
   const { type, gameId, nickName: currPlayer } = useLocalSearchParams();
+
   const yourMove = type === 'new' ? 'x' : 'o';
   const otherMove = type === 'new' ? 'o' : 'x';
   const [players, setPlayers] = useState({ you: currPlayer, other: '' });
 
   const [disableInput, setDisableInput] = useState(true);
+  const [activePlayers, setActivePlayers] = useState(1);
 
   const [board, setBoard] = useState(EMPTY_BOARD);
   const [currentTurn, setCurrentTurn] = useState('x');
+  const [gameEnded, setGameEnded] = useState(false);
 
-  //   const gameRef = ref(db, 'games/' + gameId);
   const boardRef = ref(db, 'games/' + gameId + '/board');
   const currentPlayerRef = ref(db, 'games/' + gameId + '/currentTurn');
-  const activePlayers = ref(db, 'games/' + gameId + '/activePlayers');
+  const activePlayersRef = ref(db, 'games/' + gameId + '/activePlayers');
   const otherRef = ref(db, 'games/' + gameId + otherMove);
-  const resetGameRef = ref(db, 'games/' + gameId + '/resetGame');
+  const gameEndedRef = ref(db, 'games/' + gameId + '/gameEnded');
 
-  const [resetGame, setResetGame] = useState(false);
-
+  //   Update firebase store
   const updateBoard = (board) => {
-    // update the firebase store
-    const boardRef = ref(db, 'games/' + gameId + '/board');
     set(boardRef, JSON.stringify(board));
     setBoard(board);
   };
 
   const updateCurrentTurn = (turn) => {
-    const currentPlayerRef = ref(db, 'games/' + gameId + '/currentTurn');
     set(currentPlayerRef, turn);
     setCurrentTurn(turn);
   };
 
-  const updateResetGame = (val) => {
-    const resetGameRef = ref(db, 'games/' + gameId + '/resetGame');
-    set(currentPlayerRef, JSON.stringify(val));
-    setResetGame(val);
+  const updateGameEnded = (val) => {
+    set(gameEndedRef, val);
+    setGameEnded(val);
   };
 
+  //   Sync with datastore
   useEffect(() => {
     onValue(boardRef, (snapshot) => {
       const updatedBoard = JSON.parse(snapshot.val());
@@ -66,9 +64,10 @@ export default function GameBoard() {
       const updatedCurrentPlayer = snapshot.val();
       setCurrentTurn(updatedCurrentPlayer);
     });
-    onValue(activePlayers, (snapshot) => {
+    onValue(activePlayersRef, (snapshot) => {
       if (snapshot.val() === 2) {
         setDisableInput(false);
+        setActivePlayers(snapshot.val());
       }
     });
     onValue(otherRef, (snapshot) => {
@@ -76,22 +75,14 @@ export default function GameBoard() {
         setPlayers({ ...players, other: snapshot.val() });
       }
     });
-    onValue(resetGameRef, (snapshot) => {
-      setResetGame(snapshot.val() === 'true');
+    onValue(gameEndedRef, (snapshot) => {
+      if (snapshot) {
+        setGameEnded(snapshot.val());
+      }
     });
   }, []);
 
-  //   const resetGame = () => {
-  //     // go to menu
-  //     router.navigate('/home');
-  //     // updateCurrentTurn('x');
-  //     // updateBoard([
-  //     //   ['', '', ''],
-  //     //   ['', '', ''],
-  //     //   ['', '', ''],
-  //     // ]);
-  //   };
-
+  //   Control game play
   useEffect(() => {
     setDisableInput(yourMove !== currentTurn);
     const winner = maybeWinner(board);
@@ -102,38 +93,33 @@ export default function GameBoard() {
     }
   }, [board, currentTurn]);
 
-  useEffect(() => {
-    if (resetGame) {
-      router.navigate('/home');
-    }
-    updateBoard([
-      ['', '', ''],
-      ['', '', ''],
-      ['', '', ''],
-    ]);
-  }, [resetGame]);
-
+  //   Check if game tied
   const isGameTied = (board) => {
     if (!board.some((row) => row.some((cell) => cell === ''))) {
       Alert.alert(`It's a tie!`, ``, [
         {
           text: 'New Game',
-          onPress: () => updateResetGame('true'),
-          cancelable: true,
+          onPress: handleResetGame,
         },
       ]);
     }
   };
 
+  //   Check if game won
   const gameWon = (player) => {
     let winner = yourMove === player ? 'You' : players.other;
     Alert.alert(`Huraaay`, `${winner} won`, [
       {
         text: 'New Game',
-        onPress: () => updateResetGame('true'),
-        cancelable: true,
+        onPress: handleResetGame,
       },
     ]);
+  };
+
+  //   Whenever game is tied or someone won
+  const handleResetGame = () => {
+    updateGameEnded(true);
+    router.navigate('/home');
   };
 
   const handleGameMove = (rowIndex, columnIndex) => {
@@ -159,10 +145,12 @@ export default function GameBoard() {
     >
       {disableInput && (
         <View style={styles.disabled}>
-          <Text style={styles.disabledText}>Waiting for other player...</Text>
+          <Text style={styles.disabledText}>
+            Waiting for other player...{' '}
+            {activePlayers === 1 ? 'to Join Game' : 'to Make Move'}
+          </Text>
         </View>
       )}
-
       <Link style={styles.button} href="/home">
         Menu
       </Link>

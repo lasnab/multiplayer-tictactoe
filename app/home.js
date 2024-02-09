@@ -35,10 +35,9 @@ const Home = () => {
       x: nickName,
       currentTurn: 'x',
       winner: null,
-      isTied: false,
       board: JSON.stringify(EMPTY_BOARD),
       activePlayers: 1,
-      resetGame: 'false',
+      gameEnded: false,
     });
 
     router.navigate({
