@@ -14,7 +14,7 @@ import {
 import { Link, router } from 'expo-router';
 import { Entypo } from '@expo/vector-icons';
 import { database as db } from '../../firebaseConfig';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, onValue, set, get } from 'firebase/database';
 import { EMPTY_BOARD, maybeWinner } from '../../utils';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -28,6 +28,7 @@ export default function GameBoard() {
   const [players, setPlayers] = useState({ you: currPlayer, other: '' });
 
   const [winner, setWinner] = useState('');
+  const [isTied, setIsTied] = useState(false);
 
   const [disableInput, setDisableInput] = useState(true);
   const [activePlayers, setActivePlayers] = useState(1);
@@ -39,7 +40,7 @@ export default function GameBoard() {
   const boardRef = ref(db, 'games/' + gameId + '/board');
   const currentPlayerRef = ref(db, 'games/' + gameId + '/currentTurn');
   const activePlayersRef = ref(db, 'games/' + gameId + '/activePlayers');
-  const otherRef = ref(db, 'games/' + gameId + otherMove);
+  const otherRef = ref(db, 'games/' + gameId + '/' + otherMove);
   const gameEndedRef = ref(db, 'games/' + gameId + '/gameEnded');
   const winnerRef = ref(db, 'games/' + gameId + '/winner');
 
@@ -57,10 +58,6 @@ export default function GameBoard() {
   const updateGameEnded = (val) => {
     set(gameEndedRef, val);
     setGameEnded(val);
-  };
-
-  const updateWinner = (val) => {
-    set(winnerRef, val);
   };
 
   //   Sync with datastore
@@ -89,12 +86,6 @@ export default function GameBoard() {
         setGameEnded(snapshot.val());
       }
     });
-
-    onValue(winnerRef, (snapshot) => {
-      if (snapshot) {
-        setWinner(snapshot.val());
-      }
-    });
   }, []);
 
   //   Control game play
@@ -102,7 +93,10 @@ export default function GameBoard() {
     setDisableInput(yourMove !== currentTurn);
     const winner = maybeWinner(board);
     if (winner) {
-      gameWon(winner);
+      if (winner === yourMove) {
+        let winningPlayer = currPlayer;
+        set(winnerRef, winningPlayer).then(updateGameEnded(true));
+      }
     } else {
       isGameTied(board);
     }
@@ -111,20 +105,22 @@ export default function GameBoard() {
   //   Check if game tied
   const isGameTied = (board) => {
     if (!board.some((row) => row.some((cell) => cell === ''))) {
+      setIsTied(true);
       updateGameEnded(true);
     }
   };
 
-  //   Check if game won
-  const gameWon = (player) => {
-    let winner = yourMove === player ? 'You' : players.other;
-    updateWinner(winner);
-    updateGameEnded(true);
-  };
-
   useEffect(() => {
     if (gameEnded) {
-      setTimeout(() => router.navigate('/home'), 3000);
+      get(winnerRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            setWinner(snapshot.val());
+          } else {
+            setWinner(players.other);
+          }
+        })
+        .finally(setTimeout(() => router.navigate('/home'), 3000));
     }
   }, [gameEnded]);
 
@@ -149,7 +145,11 @@ export default function GameBoard() {
       <View style={styles.container}>
         <Text style={styles.header}>Game Ended</Text>
         <Text style={{ ...styles.header, textTransform: 'uppercase' }}>
-          {winner ? `${winner} won!` : 'It was a Tie!'}
+          {isTied
+            ? 'It was a Tie!'
+            : winner === currPlayer
+            ? 'You Won :)'
+            : `You Lost :( ${winner} won!`}
         </Text>
         <Text>Redirecting you back in a few seconds...</Text>
         <ConfettiCannon count={300} origin={{ x: -10, y: 0 }} />
@@ -167,7 +167,7 @@ export default function GameBoard() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#000000" />
             <Text style={styles.disabledText}>
-              Waiting for other player{' '}
+              Waiting for {activePlayers === 1 ? 'other' : players.other}{' '}
               {activePlayers === 1 ? 'to join game' : 'to make move'}
             </Text>
           </View>
