@@ -1,0 +1,23 @@
+{
+  "games": {
+    "gameId1": {
+      "x": {
+        "name": "DemoPlayer1",
+        "score": 0
+      },
+      "o": {
+        "name": "demoPlayer2",
+        "score": 0
+      },
+      "currentTurn": "x",
+      "winner": null,
+      "isTied": false,
+      "board": [
+        ["", "", ""],
+        ["", "", ""],
+        ["", "", ""]
+      ],
+      "gameCounter": 0
+    }
+  }
+}
