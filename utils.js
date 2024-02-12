@@ -68,3 +68,23 @@ export const maybeWinner = (board) => {
     return 'x';
   }
 };
+
+export const getCurrentTimeZoneWithOffset = () => {
+  const date = new Date();
+  const timeZoneOffsetInMinutes = date.getTimezoneOffset();
+
+  // Convert the offset to hours and minutes
+  const offsetHours = Math.floor(Math.abs(timeZoneOffsetInMinutes) / 60);
+  const offsetMinutes = Math.abs(timeZoneOffsetInMinutes) % 60;
+
+  // Determine if the offset is positive or negative
+  const offsetSign = timeZoneOffsetInMinutes > 0 ? '-' : '+';
+
+  // Format the offset string as 'GMT+HH:MM' or 'GMT-HH:MM'
+  const offsetString = `GMT${offsetSign}${String(offsetHours).padStart(
+    2,
+    '0'
+  )}:${String(offsetMinutes).padStart(2, '0')}`;
+
+  return offsetString;
+};

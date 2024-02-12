@@ -5,13 +5,10 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  View,
 } from 'react-native';
 import { auth } from '../firebaseConfig';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { router } from 'expo-router';
 
 const WelcomeScreen = () => {
   const [email, setEmail] = useState('');
@@ -50,34 +47,7 @@ const WelcomeScreen = () => {
   };
 
   const handleSignUp = () => {
-    if (!email.trim()) {
-      setError('Please enter your email address.');
-      return;
-    }
-
-    if (!password.trim()) {
-      setError('Please enter your password.');
-      return;
-    }
-
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed up
-        const user = userCredential.user;
-        setError('');
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        if (errorCode === 'auth/weak-password') {
-          setError('The password is too weak.');
-        } else if (errorCode === 'auth/email-already-in-use') {
-          setError('The email address is already in use.');
-        } else {
-          console.error('Error during sign-up:', error);
-          setError('An error occurred. Please try again later.');
-        }
-      });
+    router.navigate('/signup');
   };
 
   return (
@@ -102,14 +72,17 @@ const WelcomeScreen = () => {
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <View style={{ flexDirection: 'row', paddingHorizontal: 30 }}>
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-          <Text>Sign Up</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-          <Text>Sign In</Text>
-        </TouchableOpacity>
-      </View>
+
+      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+        <Text>Sign In</Text>
+      </TouchableOpacity>
+      <Text style={{ ...styles.header, marginBottom: 0, fontWeight: 'normal' }}>
+        or
+      </Text>
+
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text>Create Account</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -129,6 +102,9 @@ const styles = StyleSheet.create({
   error: {
     color: 'red',
     marginBottom: 10,
+  },
+  text: {
+    marginBottom: 12,
   },
   textInput: {
     padding: 10,
