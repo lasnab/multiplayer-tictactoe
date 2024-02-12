@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { v4 as uuidv4 } from 'uuid';
 import { ref, set, update } from 'firebase/database';
-import { database as db } from '../firebaseConfig';
+import { database as db, auth } from '../firebaseConfig';
 import { EMPTY_BOARD } from '../utils';
 
 const Home = () => {
@@ -92,6 +92,9 @@ const Home = () => {
       <Text style={styles.header}>or</Text>
       <TouchableOpacity onPress={handleCreateGame} style={styles.button}>
         <Text style={styles.buttonText}>Create New Game</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => auth.signOut()} style={styles.button}>
+        <Text style={styles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
       <StatusBar style="auto" />
     </View>
