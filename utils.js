@@ -1,3 +1,6 @@
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { firestore } from './firebaseConfig';
+
 export const EMPTY_BOARD = [
   ['', '', ''],
   ['', '', ''],
@@ -87,4 +90,64 @@ export const getCurrentTimeZoneWithOffset = () => {
   )}:${String(offsetMinutes).padStart(2, '0')}`;
 
   return offsetString;
+};
+
+const isLastGamePlayedYesterday = (lastGamePlayed, homeTimeZone) => {
+  const currentDate = new Date();
+  const lastGameDate = new Date(lastGamePlayed);
+
+  // Adjust the last game date to the user's home timezone
+  const homeTimeZoneOffset = parseInt(homeTimeZone.substring(4), 10);
+  const lastGameDateInHomeTimeZone = new Date(
+    lastGameDate.getTime() + homeTimeZoneOffset * 60 * 1000
+  );
+
+  // Check if the last game was played yesterday in the user's current timezone
+  return (
+    currentDate.getDate() - lastGameDateInHomeTimeZone.getDate() === 1 &&
+    currentDate.getMonth() === lastGameDateInHomeTimeZone.getMonth() &&
+    currentDate.getFullYear() === lastGameDateInHomeTimeZone.getFullYear()
+  );
+};
+
+export const handleStreakOnGameEnd = (userId) => {
+  console.log('IN HANDLE STREAK GAME END');
+  console.log({ userId });
+  const userRef = doc(firestore, 'users/', userId);
+  getDoc(userRef)
+    .then((res) => {
+      console.log('og data ', res.data());
+      const {
+        homeTimeZone,
+        streak: { currentStreak, lastGamePlayed, longestStreak },
+      } = res.data();
+      console.log(isLastGamePlayedYesterday(lastGamePlayed, homeTimeZone));
+      console.log({ updatedStreak });
+      const didPlayYesterday = isLastGamePlayedYesterday(
+        lastGamePlayed,
+        homeTimeZone
+      );
+      const updatedStreak = {
+        currentStreak: didPlayYesterday ? currentStreak + 1 : 1,
+        lastGamePlayed: new Date().toISOString(),
+        longestStreak:
+          currentStreak > longestStreak ? currentStreak + 1 : longestStreak,
+      };
+      setDoc(
+        userRef,
+        {
+          streak: updatedStreak,
+        },
+        { merge: true }
+      )
+        .then((res) => {
+          console.log('updated data: ', res.data());
+        })
+        .finally(() => {
+          return;
+        });
+    })
+    .finally(() => {
+      return;
+    });
 };

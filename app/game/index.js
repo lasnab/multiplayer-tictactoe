@@ -15,13 +15,13 @@ import { Link, router } from 'expo-router';
 import { Entypo } from '@expo/vector-icons';
 import { database as db } from '../../firebaseConfig';
 import { ref, onValue, set, get } from 'firebase/database';
-import { EMPTY_BOARD, maybeWinner } from '../../utils';
+import { EMPTY_BOARD, handleStreakOnGameEnd, maybeWinner } from '../../utils';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
 export default function GameBoard() {
-  const { type, gameId, nickName: currPlayer } = useLocalSearchParams();
+  const { type, gameId, nickName: currPlayer, userId } = useLocalSearchParams();
 
   const yourMove = type === 'new' ? 'x' : 'o';
   const otherMove = type === 'new' ? 'o' : 'x';
@@ -119,8 +119,18 @@ export default function GameBoard() {
           } else {
             setWinner(players.other);
           }
+          handleStreakOnGameEnd(userId);
         })
-        .finally(setTimeout(() => router.navigate('/home'), 3000));
+        .finally(
+          setTimeout(
+            () =>
+              router.navigate({
+                pathname: '/home',
+                params: { userId: userId },
+              }),
+            3000
+          )
+        );
     }
   }, [gameEnded]);
 
