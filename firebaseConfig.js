@@ -9,13 +9,13 @@ import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  // apiKey: '',
-  // authDomain: '',
-  // projectId: '',
-  // storageBucket: '',
-  // messagingSenderId: '',
-  // appId: '',
-  // databaseURL: '',
+  apiKey: 'AIzaSyB1qZadoBTnsc639N_wt-nB8UuTynU52ac',
+  authDomain: 'tic-tac-toe-9d9ea.firebaseapp.com',
+  databaseURL: 'https://tic-tac-toe-9d9ea-default-rtdb.firebaseio.com',
+  projectId: 'tic-tac-toe-9d9ea',
+  storageBucket: 'tic-tac-toe-9d9ea.appspot.com',
+  messagingSenderId: '29416187363',
+  appId: '1:29416187363:web:81b28587882e990be62cd6',
 };
 
 // Initialize Firebase
