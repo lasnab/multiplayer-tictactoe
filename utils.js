@@ -110,19 +110,13 @@ const isLastGamePlayedYesterday = (lastGamePlayed, homeTimeZone) => {
   );
 };
 
-export const handleStreakOnGameEnd = (userId) => {
-  console.log('IN HANDLE STREAK GAME END');
-  console.log({ userId });
-  const userRef = doc(firestore, 'users/', userId);
+const updateStreakOnGameEnd = (userRef) => {
   getDoc(userRef)
     .then((res) => {
-      console.log('og data ', res.data());
       const {
         homeTimeZone,
         streak: { currentStreak, lastGamePlayed, longestStreak },
       } = res.data();
-      console.log(isLastGamePlayedYesterday(lastGamePlayed, homeTimeZone));
-      console.log({ updatedStreak });
       const didPlayYesterday = isLastGamePlayedYesterday(
         lastGamePlayed,
         homeTimeZone
@@ -131,7 +125,7 @@ export const handleStreakOnGameEnd = (userId) => {
         currentStreak: didPlayYesterday ? currentStreak + 1 : 1,
         lastGamePlayed: new Date().toISOString(),
         longestStreak:
-          currentStreak > longestStreak ? currentStreak + 1 : longestStreak,
+          currentStreak + 1 > longestStreak ? currentStreak + 1 : longestStreak,
       };
       setDoc(
         userRef,
@@ -139,15 +133,38 @@ export const handleStreakOnGameEnd = (userId) => {
           streak: updatedStreak,
         },
         { merge: true }
-      )
-        .then((res) => {
-          console.log('updated data: ', res.data());
-        })
-        .finally(() => {
-          return;
-        });
+      ).finally(() => {
+        return;
+      });
     })
     .finally(() => {
       return;
     });
+};
+
+const updateWinLossOnGameEnd = (userRef, didWin, isTied) => {
+  getDoc(userRef)
+    .then((res) => {
+      const { gamesPlayed = 0, gamesWon = 0, gamesTied = 0 } = res.data();
+      setDoc(
+        userRef,
+        {
+          gamesPlayed: gamesPlayed + 1,
+          gamesWon: didWin && !isTied ? gamesWon + 1 : gamesWon,
+          gamesTied: isTied ? gamesTied + 1 : gamesTied,
+        },
+        { merge: true }
+      ).finally(() => {
+        return;
+      });
+    })
+    .finally(() => {
+      return;
+    });
+};
+
+export const updateUserOnGameEnd = async (userId, didWin, isTied) => {
+  const userRef = doc(firestore, 'users/', userId);
+  await updateStreakOnGameEnd(userRef);
+  await updateWinLossOnGameEnd(userRef, didWin, isTied);
 };

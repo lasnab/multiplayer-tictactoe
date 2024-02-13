@@ -14,7 +14,7 @@ import { ref, set, update } from 'firebase/database';
 import { database as db, auth, firestore } from '../firebaseConfig';
 import { EMPTY_BOARD } from '../utils';
 import { doc, getDoc } from 'firebase/firestore';
-import { SimpleLineIcons } from '@expo/vector-icons';
+import { SimpleLineIcons, MaterialIcons } from '@expo/vector-icons';
 
 const Home = () => {
   const { userId } = useLocalSearchParams();
@@ -30,7 +30,6 @@ const Home = () => {
   useEffect(() => {
     setNewGameId(uuidv4());
     getDoc(userRef).then((res) => {
-      console.log(res.data());
       setUser(res.data());
       setNickName(res.data().nickName);
     });
@@ -110,6 +109,45 @@ const Home = () => {
       </TouchableOpacity>
       <View
         style={{
+          marginTop: 35,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '50%',
+        }}
+      >
+        {user?.streak.currentStreak === 0 ? (
+          <View>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 16,
+                fontWeight: 'bold',
+                textTransform: 'capitalize',
+              }}
+            >
+              No Streak 🥺
+            </Text>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 12,
+
+                textTransform: 'capitalize',
+              }}
+            >
+              Start playing daily to start a streak!
+            </Text>
+          </View>
+        ) : (
+          <Text
+            style={{ textAlign: 'center', fontSize: 24, fontWeight: 'bold' }}
+          >
+            🔥 Streak: {user?.streak.currentStreak}
+          </Text>
+        )}
+      </View>
+      <View
+        style={{
           width: '100%',
           paddingTop: 250,
           flexDirection: 'row',
@@ -117,59 +155,38 @@ const Home = () => {
           justifyContent: 'space-around',
         }}
       >
-        <View>
-          <TouchableOpacity
-            onPress={() => auth.signOut()}
-            style={{
-              ...styles.button,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              width: '58f%',
-            }}
-          >
-            <SimpleLineIcons name="logout" size={18} color="black" />
-            <Text style={styles.buttonText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
-        <View
+        <TouchableOpacity
+          onPress={() => auth.signOut()}
           style={{
+            ...styles.button,
+            width: '40%',
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '50%',
+            justifyContent: 'space-around',
           }}
         >
-          {user?.streak.currentStreak === 0 ? (
-            <View>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  textTransform: 'capitalize',
-                }}
-              >
-                No Streak 🥺
-              </Text>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 12,
+          <SimpleLineIcons name="logout" size={18} color="black" />
+          <Text style={styles.buttonText}>Sign Out</Text>
+        </TouchableOpacity>
 
-                  textTransform: 'capitalize',
-                }}
-              >
-                Start playing daily to start a streak!
-              </Text>
-            </View>
-          ) : (
-            <Text
-              style={{ textAlign: 'center', fontSize: 24, fontWeight: 'bold' }}
-            >
-              🔥 Streak: {user?.streak.currentStreak}
-            </Text>
-          )}
-        </View>
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: '/leaderboard',
+              params: { userId: userId },
+            })
+          }
+          style={{
+            ...styles.button,
+            width: '40%',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+          }}
+        >
+          <MaterialIcons name="leaderboard" size={18} color="#06ccb4" />
+          <Text style={styles.buttonText}>Leaderboard</Text>
+        </TouchableOpacity>
       </View>
 
       <StatusBar style="auto" />

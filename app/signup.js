@@ -37,6 +37,9 @@ const SignUp = () => {
           lastName: lastName,
           homeTimeZone: timeZone,
           streak: { lastGamePlayed: null, currentStreak: 0, longestStreak: 0 },
+          gamesPlayed: 0,
+          gamesWon: 0,
+          gamesTied: 0,
         })
           .then((resp) => console.log(resp))
           .catch((err) => {

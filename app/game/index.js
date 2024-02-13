@@ -15,7 +15,7 @@ import { Link, router } from 'expo-router';
 import { Entypo } from '@expo/vector-icons';
 import { database as db } from '../../firebaseConfig';
 import { ref, onValue, set, get } from 'firebase/database';
-import { EMPTY_BOARD, handleStreakOnGameEnd, maybeWinner } from '../../utils';
+import { EMPTY_BOARD, updateUserOnGameEnd, maybeWinner } from '../../utils';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -116,10 +116,11 @@ export default function GameBoard() {
         .then((snapshot) => {
           if (snapshot.exists()) {
             setWinner(snapshot.val());
+            updateUserOnGameEnd(userId, true, isTied);
           } else {
             setWinner(players.other);
+            updateUserOnGameEnd(userId, false, isTied);
           }
-          handleStreakOnGameEnd(userId);
         })
         .finally(
           setTimeout(

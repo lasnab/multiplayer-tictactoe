@@ -73,6 +73,8 @@ Ensure you have the Expo Go app installed on your device.
 - Join a game using an invitation code.
 - Play TicTacToe in real-time with Firebase updates.
 - User authentication with Firebase.
+- Leaderboard
+- Streaks
 
 ## Technologies Used
 
