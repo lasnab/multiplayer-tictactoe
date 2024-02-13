@@ -35,7 +35,7 @@ git clone https://github.com/lasnab/tictactoe-app.git
 2. Navigate to the project directory:
 
 ```bash
-cd tictactoe-app
+cd multiplayer-tictactoe
 ```
 
 3. Install dependencies:
